@@ -1124,6 +1124,18 @@
   </div>
 </div>
 
+<!-- Cierre -->
+<div id="pantallaCierre" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;padding:2rem;text-align:center;">
+  <div style="max-width:420px;">
+    <p style="font-size:.75rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;opacity:.8;">Reinventa by Mary Méndez</p>
+    <h1 style="font-size:1.75rem;font-weight:300;letter-spacing:.04em;line-height:1.2;margin-bottom:1rem;">Esta experiencia ha finalizado</h1>
+    <div style="width:40px;height:1px;background:var(--gold);margin:1.2rem auto;"></div>
+    <p style="font-size:1rem;line-height:1.7;color:var(--text-secondary);margin-bottom:.75rem;">Gracias por haber formado parte de Reinventa.</p>
+    <p style="font-size:1rem;line-height:1.7;color:var(--text-secondary);">El acceso personal a este espacio ya se encuentra cerrado.</p>
+    <p style="font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;margin-top:2.5rem;opacity:.5;">Reinventa by Mary Méndez</p>
+  </div>
+</div>
+
 <!-- App -->
 <div id="app">
 
@@ -2637,6 +2649,14 @@ function imprimirConstancia() {
   window.print();
 }
 
+/* ── Cierre ─────────────────────────────── */
+function mostrarCierre() {
+  document.getElementById('pantallaCarga').style.display = 'none';
+  document.getElementById('pantallaLogin').style.display = 'none';
+  var c = document.getElementById('pantallaCierre');
+  c.style.display = 'flex';
+}
+
 /* ── Login ──────────────────────────────── */
 function accederConCodigo() {
   var codigo = (document.getElementById('login-codigo').value || '').trim().toUpperCase();
@@ -2650,7 +2670,9 @@ function accederConCodigo() {
   fetch('/api/hub?id=' + encodeURIComponent(codigo))
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if (data.error) {
+      if (data.error === 'hub_cerrado') {
+        mostrarCierre();
+      } else if (data.error) {
         document.getElementById('pantallaCarga').style.display = 'none';
         document.getElementById('pantallaLogin').style.display = 'flex';
         err.style.display = 'block';
@@ -2697,7 +2719,9 @@ if (!id) {
   fetch('/api/hub?id=' + encodeURIComponent(id))
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if (data.error === 'acceso_cedido') {
+      if (data.error === 'hub_cerrado') {
+        mostrarCierre();
+      } else if (data.error === 'acceso_cedido') {
         document.getElementById('pantallaCarga').style.display = 'none';
         document.getElementById('pantallaLogin').style.display = 'flex';
         document.getElementById('login-error').textContent = 'Este espacio ya no está disponible. Si tienes dudas, escríbenos.';

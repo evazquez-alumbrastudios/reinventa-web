@@ -360,8 +360,27 @@ function handleHub(id) {
     return ContentService.createTextOutput(JSON.stringify({ error: 'ID requerido' })).setMimeType(ContentService.MimeType.JSON);
   }
 
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // ── Verificar hub_status en Contenidos — si CLOSED, bloquear acceso público ──
+  try {
+    var shCont = ss.getSheetByName('Contenidos');
+    if (shCont) {
+      var contRows = shCont.getDataRange().getValues();
+      for (var ci = 1; ci < contRows.length; ci++) {
+        if ((contRows[ci][0]||'').toString().trim() === 'config' &&
+            (contRows[ci][1]||'').toString().trim() === 'evento' &&
+            (contRows[ci][2]||'').toString().trim() === 'hub_status') {
+          if ((contRows[ci][4]||'').toString().trim() === 'CLOSED') {
+            return ContentService.createTextOutput(JSON.stringify({ error: 'hub_cerrado' })).setMimeType(ContentService.MimeType.JSON);
+          }
+          break;
+        }
+      }
+    }
+  } catch(eHub) {}
+
   var idNorm = id.toString().trim().toUpperCase();
-  var ss     = SpreadsheetApp.getActiveSpreadsheet();
 
   // ── Buscar en Asistencia: primero por ID (col A), luego por correo (col C) ──
   var asiSheet = getAsistenciaSheet();
@@ -706,18 +725,23 @@ function handleAdmin() {
     }
   } catch(eComm) {}
 
-  // encuesta_post_status desde Contenidos
+  // encuesta_post_status y hub_status desde Contenidos
   var encuestaPostStatus = 'OPEN';
+  var hubStatusValue = 'OPEN';
   try {
     var shCont2 = ss.getSheetByName('Contenidos');
     if (shCont2) {
       var rowsCont2 = shCont2.getDataRange().getValues();
       for (var ci2 = 1; ci2 < rowsCont2.length; ci2++) {
+        var claveC2 = (rowsCont2[ci2][2]||'').toString().trim();
         if ((rowsCont2[ci2][0]||'').toString().trim() === 'config' &&
-            (rowsCont2[ci2][1]||'').toString().trim() === 'evento' &&
-            (rowsCont2[ci2][2]||'').toString().trim() === 'encuesta_post_status') {
-          encuestaPostStatus = (rowsCont2[ci2][4]||'OPEN').toString().trim();
-          break;
+            (rowsCont2[ci2][1]||'').toString().trim() === 'evento') {
+          if (claveC2 === 'encuesta_post_status') {
+            encuestaPostStatus = (rowsCont2[ci2][4]||'OPEN').toString().trim();
+          }
+          if (claveC2 === 'hub_status') {
+            hubStatusValue = (rowsCont2[ci2][4]||'OPEN').toString().trim();
+          }
         }
       }
     }
@@ -732,7 +756,8 @@ function handleAdmin() {
       descargas:           descargasArray,
       registros:           registrosSummary,
       comunicaciones:      commsSummary,
-      encuestaPostStatus:  encuestaPostStatus
+      encuestaPostStatus:  encuestaPostStatus,
+      hubStatus:           hubStatusValue
     }))
     .setMimeType(ContentService.MimeType.JSON);
 }
@@ -2279,6 +2304,7 @@ function handleAdminAction(data) {
   if (sub === 'reenviar_rescate')            return adminReenviarRescate(data.tipo, data.email);
   if (sub === 'reporte_completo')            return adminReporteCompleto();
   if (sub === 'set_survey_status')           return adminSetSurveyStatus(data.status);
+  if (sub === 'set_hub_status')              return adminSetHubStatus(data.status);
   if (sub === 'create_test_profile')         return adminCreateTestProfile();
 
   // ── Contenidos editables (Etapa 2) ──────────────────────────
@@ -3856,6 +3882,24 @@ function adminReporteCompleto() {
 
   return ContentService.createTextOutput(JSON.stringify({ result: 'ok', data: result }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function adminSetHubStatus(status) {
+  if (status !== 'OPEN' && status !== 'CLOSED') return jsErr('Estado inválido: usa OPEN o CLOSED');
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var shC = ss.getSheetByName('Contenidos');
+  if (!shC) return jsErr('Hoja Contenidos no encontrada');
+  var rows = shC.getDataRange().getValues();
+  for (var i = 1; i < rows.length; i++) {
+    if ((rows[i][0]||'').toString().trim() === 'config' &&
+        (rows[i][1]||'').toString().trim() === 'evento' &&
+        (rows[i][2]||'').toString().trim() === 'hub_status') {
+      shC.getRange(i + 1, 5).setValue(status);
+      return jsOk({ hub_status: status });
+    }
+  }
+  shC.appendRow(['config', 'evento', 'hub_status', '', status]);
+  return jsOk({ hub_status: status, created: true });
 }
 
 function adminSetSurveyStatus(status) {
