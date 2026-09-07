@@ -19,3 +19,8 @@
 
 # Logs
 *.log
+
+# Backups y archivos temporales
+*.bak_*
+*.BACKUP*.gs
+hub-preview.html
