@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reservar lugar — REINVENTA by Mary Méndez</title>
-  <meta name="robots" content="noindex" />
+  <title>Reservar — REINVENTA by Mary Méndez</title>
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    [hidden] { display: none !important; }
     :root {
       --plum: #2A0F25;
       --gold: #C6A56A;
@@ -20,7 +19,7 @@
       min-height: 100dvh;
       background: rgba(26,9,20,.96);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
       padding: 1.4rem 1rem 2rem;
       font-family: 'Gill Sans','Gill Sans MT','Segoe UI',Calibri,sans-serif;
@@ -30,92 +29,68 @@
       background: var(--cream);
       max-width: 480px;
       width: 100%;
-      padding: clamp(1.8rem,5vw,2.8rem);
+      padding: clamp(2rem,6vw,3.2rem);
       margin: auto;
-      position: relative;
+      text-align: center;
     }
     .logo {
       display: block;
-      text-align: center;
-      margin-bottom: 1.4rem;
+      margin-bottom: 2rem;
     }
     .logo img { height: 36px; }
-    h2 {
-      font-family: 'Big Caslon','Didot',Georgia,serif;
-      font-weight: 400;
-      font-size: 1.5rem;
-      color: var(--plum);
-      margin-bottom: .35rem;
-    }
-    .sub {
-      font-size: .9rem;
-      color: var(--mauve);
-      margin-bottom: 1.6rem;
-      line-height: 1.55;
-    }
-    .badge {
+    .eyebrow {
       display: inline-block;
-      background: var(--plum);
-      color: var(--gold);
       font-size: .7rem;
       letter-spacing: .12em;
       text-transform: uppercase;
-      padding: .2rem .7rem;
+      color: var(--mauve);
       margin-bottom: 1.2rem;
     }
-    .field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; }
-    .field label { font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; color: #4a3a44; font-weight: 600; }
-    .field input, .field textarea {
-      font-family: inherit; font-size: 1rem; color: var(--ink);
-      background: transparent; border: none;
-      border-bottom: 1px solid rgba(34,16,25,.25);
-      padding: .5rem .1rem; width: 100%;
-      transition: border-color .25s;
+    .divider {
+      width: 2rem;
+      height: 1px;
+      background: var(--gold);
+      margin: 1.4rem auto;
+      opacity: .6;
     }
-    .field input:focus, .field textarea:focus { border-color: var(--gold); outline: none; }
-    .field textarea { resize: none; min-height: 60px; }
-    .req { color: var(--mauve); margin-left: .1em; }
-    .err { font-size: .75rem; color: #8a3b3b; min-height: 1em; }
-    .radio-row { margin-top: .5rem; }
-    .radio-row label {
-      display: flex; align-items: center; gap: .55rem;
-      font-size: .95rem; color: var(--ink); cursor: pointer;
-      text-transform: none; font-weight: 400; letter-spacing: 0;
-      margin-bottom: .45rem; line-height: 1.3;
+    h2 {
+      font-family: 'Big Caslon','Didot',Georgia,serif;
+      font-weight: 400;
+      font-size: 1.6rem;
+      color: var(--plum);
+      line-height: 1.3;
+      margin-bottom: 1rem;
     }
-    .radio-row input[type="radio"] { flex-shrink: 0; width: 1rem; height: 1rem; margin: 0; }
-    .check-row {
-      display: flex; align-items: flex-start; gap: .55rem;
-      font-size: .81rem; color: #4a3a44; line-height: 1.5;
-      margin-bottom: .65rem; cursor: pointer;
+    p {
+      font-size: .95rem;
+      color: #5a4450;
+      line-height: 1.7;
+      max-width: 34ch;
+      margin: 0 auto;
     }
-    .check-row input { accent-color: var(--gold); width: 1rem; height: 1rem; flex-shrink: 0; margin-top: .15rem; }
-    .check-row a { color: var(--gold); }
-    .btn {
-      width: 100%; padding: .9rem 1.4rem; margin-top: .8rem;
-      background: var(--plum); color: var(--cream);
-      border: none; cursor: pointer;
-      font-family: inherit; font-size: .88rem;
-      letter-spacing: .1em; text-transform: uppercase;
+    .cta {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: .85rem 2rem;
+      background: var(--plum);
+      color: var(--cream);
+      font-family: inherit;
+      font-size: .82rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      text-decoration: none;
       transition: opacity .2s;
     }
-    .btn:hover { opacity: .85; }
-    .btn:disabled { opacity: .5; cursor: not-allowed; }
-    .note { font-size: .73rem; color: var(--mauve); margin-top: .9rem; text-align: center; }
-    .spinner {
-      width: 13px; height: 13px; border-radius: 50%;
-      border: 2px solid rgba(239,233,226,.3);
-      border-top-color: var(--cream);
-      animation: spin .7s linear infinite;
-      display: inline-block; vertical-align: middle;
+    .cta:hover { opacity: .8; }
+    .nota {
+      margin-top: 1.4rem;
+      font-size: .75rem;
+      color: var(--mauve);
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .volver { display: block; text-align: center; margin-top: 1.1rem; font-size: .8rem; color: var(--mauve); }
-    .volver a { color: var(--mauve); }
   </style>
-<!-- Vercel Analytics + Speed Insights -->
-<script defer src="/_vercel/insights/script.js"></script>
-<script defer src="/_vercel/speed-insights/script.js"></script>
+  <!-- Vercel Analytics + Speed Insights -->
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
 <div class="box">
@@ -123,223 +98,25 @@
     <img src="assets/icons/imagotipo-dorado.png" alt="REINVENTA by Mary Méndez" />
   </a>
 
-  <span class="badge" id="fase-badge">Early Bird · $1,300 MXN</span>
-  <h2>Un paso antes de reservar</h2>
-  <p class="sub">Cuéntanos un poco sobre ti para que Mary pueda acompañarte mejor.</p>
+  <span class="eyebrow">Primera edición · Agosto 2026</span>
 
-  <form id="form" novalidate>
-    <div class="field">
-      <label for="nombre">Nombre completo<span class="req">*</span></label>
-      <input type="text" id="nombre" autocomplete="name" required />
-      <span class="err" id="err-nombre"></span>
-    </div>
-    <div class="field">
-      <label for="correo">Correo electrónico<span class="req">*</span></label>
-      <input type="email" id="correo" autocomplete="email" required />
-      <span class="err" id="err-correo"></span>
-    </div>
-    <div class="field">
-      <label for="whatsapp">WhatsApp<span class="req">*</span></label>
-      <input type="tel" id="whatsapp" autocomplete="tel" required />
-      <span class="err" id="err-whatsapp"></span>
-    </div>
-    <div class="field">
-      <label>¿Cómo prefieres que Mary te contacte?<span class="req" style="white-space:nowrap;">*</span></label>
-      <div class="radio-row">
-        <label><input type="radio" name="contacto" value="WhatsApp" style="accent-color:var(--gold);" /> WhatsApp</label>
-        <label><input type="radio" name="contacto" value="Correo electrónico" style="accent-color:var(--gold);" /> Correo electrónico</label>
-      </div>
-      <span class="err" id="err-contacto"></span>
-    </div>
-    <div class="field">
-      <label for="busca">¿Qué estás buscando?<span class="req">*</span></label>
-      <textarea id="busca" rows="2" required></textarea>
-      <span class="err" id="err-busca"></span>
-    </div>
-    <div class="field">
-      <label for="ocupacion">¿A qué te dedicas?<span class="req">*</span></label>
-      <select id="ocupacion" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;">
-        <option value="">— Selecciona una opción —</option>
-        <option value="Empresaria / ejecutiva">Empresaria / ejecutiva</option>
-        <option value="Ama de casa">Ama de casa</option>
-        <option value="Profesionista independiente">Profesionista independiente</option>
-        <option value="Estudiante">Estudiante</option>
-        <option value="Sector público">Sector público</option>
-        <option value="Otro">Otro</option>
-      </select>
-      <span class="err" id="err-ocupacion"></span>
-    </div>
-    <div class="field" id="field-ocupacion-otro" hidden>
-      <label for="ocupacion-otro">¿Cuál?<span class="req">*</span></label>
-      <input type="text" id="ocupacion-otro" />
-      <span class="err" id="err-ocupacion-otro"></span>
-    </div>
-    <div class="field">
-      <label for="como">¿Cómo te enteraste del taller?<span class="req">*</span></label>
-      <select id="como" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;">
-        <option value="">— Selecciona una opción —</option>
-        <option value="Newsletter">Newsletter</option>
-        <option value="Instagram">Instagram</option>
-        <option value="Mary me contactó">Mary me contactó directamente</option>
-        <option value="Recomendación">Me lo recomendaron</option>
-        <option value="Otro">Otro</option>
-      </select>
-      <span class="err" id="err-como"></span>
-    </div>
-    <div class="field" id="field-como-otro" hidden>
-      <label for="como-otro">¿Cuál?<span class="req">*</span></label>
-      <input type="text" id="como-otro" />
-      <span class="err" id="err-como-otro"></span>
-    </div>
+  <h2>Esta edición<br>ya concluyó</h2>
 
-    <div style="margin-top:.6rem;">
-      <label class="check-row">
-        <input type="checkbox" id="privacidad" required />
-        He leído y acepto el <a href="/aviso-de-privacidad" target="_blank">Aviso de Privacidad</a> y autorizo el tratamiento de mis datos.<span class="req">*</span>
-      </label>
-      <span class="err" id="err-privacidad"></span>
+  <div class="divider"></div>
 
-      <label class="check-row">
-        <input type="checkbox" id="marketing" />
-        Quiero recibir información sobre próximos talleres y experiencias de REINVENTA.
-      </label>
+  <p>El taller <em>Lo que tu imagen comunica</em> ya se llevó a cabo el 15 de agosto de 2026. El acceso a reservaciones está cerrado.</p>
 
-      <label class="check-row">
-        <input type="checkbox" id="imagen" required />
-        Autorizo el uso de fotografías o videos en los que aparezca para la difusión de REINVENTA.<span class="req">*</span>
-      </label>
-      <span class="err" id="err-imagen"></span>
-    </div>
+  <a href="/taller-imagen-personal" class="cta">Ver lo que vivimos</a>
 
-    <button type="submit" class="btn" id="submitBtn">Continuar al pago</button>
-    <p class="note">Tus datos solo se usan para que Mary pueda acompañarte.</p>
-  </form>
-
-  <p class="volver"><a href="/taller-imagen-personal">← Ver detalles del taller</a></p>
+  <p class="nota">¿Te interesa la siguiente edición? Puedes dejar tu nombre en la página del taller.</p>
 </div>
 
-<script>
-(function(){
-  var SHEETS = 'https://script.google.com/macros/s/AKfycbxY1AuqgR3sonF2MhxsphCVWHQr5pTJg-Qs_xmEHEFnTaK4Q6y_ivFXrhfHUW69or7ymA/exec';
-
-  var LINKS = {
-    early_bird:   'https://buy.stripe.com/aFa6oG2Mi3ED2505w76Ri00',
-    preventa:     'https://buy.stripe.com/7sY8wO86C4IHcJE1fR6Ri01',
-    precio_final: 'https://buy.stripe.com/14A8wO86C3ED7pk8Ij6Ri02'
-  };
-
-  var BADGES = {
-    early_bird:   'Early Bird · $1,300 MXN',
-    preventa:     'Preventa · $1,500 MXN',
-    precio_final: 'Últimos lugares · $1,700 MXN'
-  };
-
-  /* Leer fase del parámetro ?fase= que viene de /api/reservar */
-  var params = new URLSearchParams(window.location.search);
-  var fase = params.get('fase') || 'early_bird';
-  if (!LINKS[fase]) fase = 'early_bird';
-
-  /* Capturar UTM y persistir en sessionStorage */
-  var UTM_MAP = {
-    caceca: 'Newsletter',
-    instagram: 'Instagram',
-    instagram_stories: 'Instagram Stories',
-    mary: 'Mary me contactó',
-    boca_a_boca: 'Recomendación'
-  };
-  var utmSource = params.get('utm_source') || '';
-  if (utmSource) sessionStorage.setItem('utm_source', utmSource);
-  else utmSource = sessionStorage.getItem('utm_source') || '';
-
-  /* Pre-llenar el dropdown si hay UTM */
-  if (utmSource && UTM_MAP[utmSource]) {
-    var comoSelect = document.getElementById('como');
-    for (var i = 0; i < comoSelect.options.length; i++) {
-      if (comoSelect.options[i].value === UTM_MAP[utmSource]) {
-        comoSelect.selectedIndex = i; break;
-      }
-    }
-  }
-
-  document.getElementById('fase-badge').textContent = BADGES[fase];
-
-  var form = document.getElementById('form');
-  var btn  = document.getElementById('submitBtn');
-
-  function err(id, msg){ document.getElementById(id).textContent = msg || ''; }
-  /* Mostrar/ocultar campos "otro" */
-  document.getElementById('ocupacion').addEventListener('change', function(){
-    document.getElementById('field-ocupacion-otro').hidden = this.value !== 'Otro';
-  });
-  document.getElementById('como').addEventListener('change', function(){
-    document.getElementById('field-como-otro').hidden = this.value !== 'Otro';
-  });
-
-  function clearErr(){ err('err-nombre',''); err('err-correo',''); err('err-whatsapp',''); err('err-contacto',''); err('err-busca',''); err('err-ocupacion',''); err('err-ocupacion-otro',''); err('err-como',''); err('err-como-otro',''); err('err-privacidad',''); err('err-imagen',''); }
-
-  function validate(){
-    var ok = true;
-    var nombre = document.getElementById('nombre').value.trim();
-    var correo = document.getElementById('correo').value.trim();
-    var wa     = document.getElementById('whatsapp').value.trim();
-    var cont   = document.querySelector('input[name="contacto"]:checked');
-    if(nombre.length < 2){ err('err-nombre','Escribe tu nombre completo.'); ok=false; } else err('err-nombre','');
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)){ err('err-correo','Escribe un correo válido.'); ok=false; } else err('err-correo','');
-    if(!/^[0-9+()\s\-]{8,}$/.test(wa)){ err('err-whatsapp','Escribe un número válido.'); ok=false; } else err('err-whatsapp','');
-    if(!cont){ err('err-contacto','Elige una opción.'); ok=false; } else err('err-contacto','');
-    var busca = document.getElementById('busca').value.trim();
-    if(busca.length < 2){ err('err-busca','Cuéntanos qué estás buscando.'); ok=false; } else err('err-busca','');
-    var ocup = document.getElementById('ocupacion').value;
-    if(!ocup){ err('err-ocupacion','Selecciona una opción.'); ok=false; } else err('err-ocupacion','');
-    if(ocup === 'Otro'){ var ocupOtro = document.getElementById('ocupacion-otro').value.trim(); if(!ocupOtro){ err('err-ocupacion-otro','Cuéntanos a qué te dedicas.'); ok=false; } else err('err-ocupacion-otro',''); }
-    var como = document.getElementById('como').value;
-    if(!como){ err('err-como','Selecciona una opción.'); ok=false; } else err('err-como','');
-    if(como === 'Otro'){ var comoOtro = document.getElementById('como-otro').value.trim(); if(!comoOtro){ err('err-como-otro','Cuéntanos cómo te enteraste.'); ok=false; } else err('err-como-otro',''); }
-    if(!document.getElementById('privacidad').checked){ err('err-privacidad','Debes aceptar el aviso de privacidad.'); ok=false; } else err('err-privacidad','');
-    if(!document.getElementById('imagen').checked){ err('err-imagen','Este campo es obligatorio.'); ok=false; } else err('err-imagen','');
-    return ok;
-  }
-
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    clearErr();
-    if(!validate()) return;
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Enviando…';
-
-    var payload = {
-      action:          'reserva_taller',
-      nombre:          document.getElementById('nombre').value.trim(),
-      correo:          document.getElementById('correo').value.trim(),
-      whatsapp:        document.getElementById('whatsapp').value.trim(),
-      contacto:        (document.querySelector('input[name="contacto"]:checked')||{}).value || '',
-      transformar:     document.getElementById('busca').value.trim(),
-      servicio:        'Taller de imagen y liderazgo — ' + BADGES[fase].split('·')[0].trim(),
-      marketing:       document.getElementById('marketing').checked ? 'Sí' : 'No',
-      autoriza_imagen: document.getElementById('imagen').checked ? 'Sí' : 'No',
-      origen:          'link-directo',
-      ocupacion:       document.getElementById('ocupacion').value === 'Otro' ? 'Otro: ' + document.getElementById('ocupacion-otro').value.trim() : document.getElementById('ocupacion').value,
-      canal_utm:       utmSource,
-      como_se_entero:  document.getElementById('como').value === 'Otro' ? 'Otro: ' + document.getElementById('como-otro').value.trim() : document.getElementById('como').value
-    };
-
-    function goStripe(){
-      window.location.href = LINKS[fase];
-    }
-
-    if(SHEETS){
-      fetch(SHEETS, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify(payload)
-      }).then(goStripe).catch(goStripe);
-    } else {
-      goStripe();
-    }
-  });
-})();
-</script>
+<!--
+  INFRAESTRUCTURA STRIPE — MANTENIDA, NO ACTIVA EN UI
+  Fase early_bird:   https://buy.stripe.com/aFa6oG2Mi3ED2505w76Ri00
+  Fase preventa:     https://buy.stripe.com/7sY8wO86C4IHcJE1fR6Ri01
+  Fase precio_final: https://buy.stripe.com/14A8wO86C3ED7pk8Ij6Ri02
+  GAS endpoint:      https://script.google.com/macros/s/AKfycbxY1AuqgR3sonF2MhxsphCVWHQr5pTJg-Qs_xmEHEFnTaK4Q6y_ivFXrhfHUW69or7ymA/exec
+-->
 </body>
 </html>
