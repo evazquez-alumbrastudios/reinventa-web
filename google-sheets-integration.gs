@@ -42,7 +42,7 @@ var SHEET_ASISTENCIA     = 'Asistencia';
 var SHEET_MEDIDAS        = 'Medidas';
 var SHEET_PROSPECTOS     = 'Prospectos';
 
-var EMAILS_NOTIFICACION = ['mejoracontinua@caceca.org', 'alopez@alumbrastudios.com'];
+var EMAILS_NOTIFICACION = ['evazquez@alumbrastudios.com', 'alopez@alumbrastudios.com'];
 var LIMITE_TOTAL        = 40;
 var STAFF_PIN           = '1508';
 
@@ -1969,11 +1969,11 @@ function cancelarEnvioQR() {
 }
 
 /* ── Correos de prueba ───────────────────────────────────────── */
-function enviarCorreoPrueba()              { enviarCorreoConfirmacion('Valeria García', 'mejoracontinua@caceca.org', 'Early Bird', 'RNV-001'); }
-function enviarCorreoIndicacionesPrueba()  { enviarCorreoIndicaciones('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
-function enviarCorreoRecordatorioPrueba()  { enviarCorreoRecordatorio('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
-function enviarCorreoQRPrueba()            { enviarCorreoQR('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
-function enviarCorreoAgradecimientoPrueba(){ enviarCorreoAgradecimiento('Valeria García', 'mejoracontinua@caceca.org', 'RNV-001'); }
+function enviarCorreoPrueba()              { enviarCorreoConfirmacion('Valeria García', 'evazquez@alumbrastudios.com', 'Early Bird', 'RNV-001'); }
+function enviarCorreoIndicacionesPrueba()  { enviarCorreoIndicaciones('Valeria García', 'evazquez@alumbrastudios.com', 'RNV-001'); }
+function enviarCorreoRecordatorioPrueba()  { enviarCorreoRecordatorio('Valeria García', 'evazquez@alumbrastudios.com', 'RNV-001'); }
+function enviarCorreoQRPrueba()            { enviarCorreoQR('Valeria García', 'evazquez@alumbrastudios.com', 'RNV-001'); }
+function enviarCorreoAgradecimientoPrueba(){ enviarCorreoAgradecimiento('Valeria García', 'evazquez@alumbrastudios.com', 'RNV-001'); }
 
 /* ── Prueba WhatsApp ─────────────────────────────────────────── */
 function probarEnlaceWhatsApp() {
@@ -2968,14 +2968,14 @@ function adminEnviarUltimaLlamadaMasivo() {
 function adminTestEmailRecordatorioPost() {
   var pendientes = _filtrarSinRecursos();
   var p = pendientes.length > 0 ? pendientes[0] : { nombre: 'Elizabeth Santos (PRUEBA)', id: 'RNV-001' };
-  enviarCorreoRecordatorioPost(p.nombre, 'mejoracontinua@caceca.org', p.id);
+  enviarCorreoRecordatorioPost(p.nombre, 'evazquez@alumbrastudios.com', p.id);
   return jsOk({ result: 'ok', nombre: p.nombre, id: p.id, totalPendientes: pendientes.length });
 }
 
 function adminTestEmailUltimaLlamada() {
   var pendientes = _filtrarSinRecursos();
   var p = pendientes.length > 0 ? pendientes[0] : { nombre: 'Elizabeth Santos (PRUEBA)', id: 'RNV-001' };
-  enviarCorreoUltimaLlamada(p.nombre, 'mejoracontinua@caceca.org', p.id);
+  enviarCorreoUltimaLlamada(p.nombre, 'evazquez@alumbrastudios.com', p.id);
   return jsOk({ result: 'ok', nombre: p.nombre, id: p.id, totalPendientes: pendientes.length });
 }
 
@@ -3100,12 +3100,12 @@ function adminRegistrarInvitada(nombre, correo, telefono) {
 }
 
 function adminTestEmailAcompanante() {
-  enviarCorreoBienvenidaAcompanante('Valeria García (PRUEBA acompañante)', 'mejoracontinua@caceca.org', 'Early Bird x2', 'RNV-001');
+  enviarCorreoBienvenidaAcompanante('Valeria García (PRUEBA acompañante)', 'evazquez@alumbrastudios.com', 'Early Bird x2', 'RNV-001');
   return jsOk({ result: 'ok' });
 }
 
 function adminTestEmail() {
-  enviarCorreoConfirmacion('Valeria García (PRUEBA)', 'mejoracontinua@caceca.org', 'Early Bird', 'RNV-001');
+  enviarCorreoConfirmacion('Valeria García (PRUEBA)', 'evazquez@alumbrastudios.com', 'Early Bird', 'RNV-001');
   return jsOk({ result: 'ok' });
 }
 
@@ -3122,7 +3122,7 @@ function adminTestEmailAgradecimiento() {
       break;
     }
   }
-  enviarCorreoAgradecimiento(nombre, 'mejoracontinua@caceca.org', idUnico);
+  enviarCorreoAgradecimiento(nombre, 'evazquez@alumbrastudios.com', idUnico);
   return jsOk({ result: 'ok', nombre: nombre, id: idUnico });
 }
 
@@ -3630,9 +3630,9 @@ function testFallbackConPublicadoVacio() {
 
 /* Prueba 7: Correo de prueba usando contenido (a destinatario controlado) */
 function testCorreoConContenido() {
-  // Usa mejoracontinua@caceca.org — NO envía a asistentes reales
-  enviarCorreoRecordatorio('Valeria García (PRUEBA)', 'mejoracontinua@caceca.org', 'RNV-001');
-  Logger.log('✅ Correo de prueba enviado a mejoracontinua@caceca.org');
+  // Usa evazquez@alumbrastudios.com — NO envía a asistentes reales
+  enviarCorreoRecordatorio('Valeria García (PRUEBA)', 'evazquez@alumbrastudios.com', 'RNV-001');
+  Logger.log('✅ Correo de prueba enviado a evazquez@alumbrastudios.com');
 }
 
 /* Prueba 8: Verificar variables dinámicas */
@@ -3934,7 +3934,7 @@ function adminCreateTestProfile() {
     if ((asiData[i][0]||'').toString().trim() === TEST_ID) { filaAsi = i + 1; break; }
   }
   if (filaAsi === -1) {
-    asiSheet.appendRow([TEST_ID, 'Prueba Test', 'mejoracontinua@caceca.org', 'Early Bird', '✓', new Date(), '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+    asiSheet.appendRow([TEST_ID, 'Prueba Test', 'evazquez@alumbrastudios.com', 'Early Bird', '✓', new Date(), '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
     filaAsi = asiSheet.getLastRow();
   } else {
     // Asegurar check-in marcado y encuesta post limpia
@@ -3954,7 +3954,7 @@ function adminCreateTestProfile() {
       if ((prevData[j][0]||'').toString().trim() === TEST_ID) { yaExiste = true; break; }
     }
     if (!yaExiste) {
-      prevSheet.appendRow([TEST_ID, 'Prueba Test', 'mejoracontinua@caceca.org', new Date(), 3, 3, 3, 3, 'Bienestar personal', 'Probar la encuesta post', 3, 3, 3, 3]);
+      prevSheet.appendRow([TEST_ID, 'Prueba Test', 'evazquez@alumbrastudios.com', new Date(), 3, 3, 3, 3, 'Bienestar personal', 'Probar la encuesta post', 3, 3, 3, 3]);
     }
   }
 
