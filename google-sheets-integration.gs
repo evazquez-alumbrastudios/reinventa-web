@@ -136,6 +136,7 @@ function handleFormSubmit(data) {
     if (data.transformar) sheet.getRange(existingRow, 6).setValue(data.transformar);
     if (data.cuando)      sheet.getRange(existingRow, 7).setValue(data.cuando);
     if (data.contacto)    sheet.getRange(existingRow, 8).setValue(data.contacto);
+    if (data.privacidad)  sheet.getRange(existingRow, 9).setValue('Sí');
   } else {
     sheet.appendRow([
       new Date(),
@@ -146,7 +147,7 @@ function handleFormSubmit(data) {
       data.transformar || '',
       data.cuando      || '',
       data.contacto    || '',
-      data.marketing   || ''
+      data.privacidad ? 'Sí' : (data.marketing || '')
     ]);
   }
 

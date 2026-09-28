@@ -647,7 +647,7 @@
     <div class="inversion-head reveal">
       <div class="orn"><span class="line"></span><span class="eyebrow">Lo que sigue</span><span class="line"></span></div>
       <h2 style="margin-top:1rem;">¿Te interesa la próxima edición?</h2>
-      <p>Deja tu nombre y correo para ser la primera en enterarte cuando abramos nuevas fechas de REINVENTA.</p>
+      <p>Deja tus datos para ser la primera en enterarte cuando abramos nuevas fechas de REINVENTA.</p>
     </div>
 
     <div class="reveal" style="max-width:480px;margin:0 auto;">
@@ -660,10 +660,32 @@
           <label for="p-correo" style="font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;">Correo electrónico</label>
           <input type="email" id="p-correo" autocomplete="email" placeholder="tu@correo.com" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;transition:border-color .25s;" required />
         </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;">
+          <label for="p-whatsapp" style="font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;">WhatsApp</label>
+          <input type="tel" id="p-whatsapp" autocomplete="tel" placeholder="+52 55 0000 0000" style="font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;border:none;border-bottom:1px solid rgba(34,16,25,.25);padding:.5rem .1rem;width:100%;transition:border-color .25s;" required />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.5rem;">
+          <span style="font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;">¿Cómo prefieres que te contactemos?</span>
+          <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;cursor:pointer;">
+              <input type="radio" id="p-contacto-wa" name="p_contacto" value="WhatsApp" style="accent-color:var(--gold);" required />
+              WhatsApp
+            </label>
+            <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;cursor:pointer;">
+              <input type="radio" id="p-contacto-email" name="p_contacto" value="Correo electrónico" style="accent-color:var(--gold);" />
+              Correo electrónico
+            </label>
+          </div>
+          <span id="p-msg-contacto" style="font-size:.78rem;color:#c0392b;min-height:1em;"></span>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;color:var(--mauve);cursor:pointer;line-height:1.5;">
+          <input type="checkbox" id="p-privacidad" style="margin-top:.2rem;accent-color:var(--gold);flex-shrink:0;" required />
+          Acepto el <a href="/aviso-de-privacidad" style="color:var(--gold);" target="_blank">Aviso de Privacidad</a> y autorizo a REINVENTA by Mary Méndez a contactarme.
+        </label>
+        <span id="p-msg-priv" style="font-size:.78rem;color:#c0392b;min-height:1em;"></span>
         <button type="submit" class="btn btn-dark" style="margin-top:.5rem;align-self:flex-start;">Avísame de la próxima edición</button>
         <p id="p-msg" style="font-size:.82rem;color:var(--mauve);min-height:1.2em;"></p>
       </form>
-      <p style="font-size:.78rem;color:var(--mauve);margin-top:1.2rem;">Sin compromiso. Respetamos tu privacidad conforme a nuestro <a href="/aviso-de-privacidad" style="color:var(--gold);">Aviso de Privacidad</a>.</p>
     </div>
   </div>
 </section>
@@ -809,16 +831,30 @@
   if (formP) {
     formP.addEventListener('submit', function(e) {
       e.preventDefault();
-      var nombre = document.getElementById('p-nombre').value.trim();
-      var correo = document.getElementById('p-correo').value.trim();
-      var msg    = document.getElementById('p-msg');
-      if (!nombre || nombre.length < 2) { msg.textContent = 'Por favor escribe tu nombre.'; return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { msg.textContent = 'Por favor escribe un correo válido.'; return; }
+      var nombre    = document.getElementById('p-nombre').value.trim();
+      var correo    = document.getElementById('p-correo').value.trim();
+      var whatsapp  = document.getElementById('p-whatsapp').value.trim();
+      var contacto  = (formP.querySelector('input[name="p_contacto"]:checked') || {}).value || '';
+      var privacidad = document.getElementById('p-privacidad').checked;
+      var msg       = document.getElementById('p-msg');
+      var msgC      = document.getElementById('p-msg-contacto');
+      var msgP      = document.getElementById('p-msg-priv');
+      msgC.textContent = ''; msgP.textContent = '';
+      var ok = true;
+      if (!nombre || nombre.length < 2) { msg.textContent = 'Por favor escribe tu nombre.'; ok = false; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { msg.textContent = 'Por favor escribe un correo válido.'; ok = false; }
+      if (!whatsapp) { msg.textContent = 'Por favor escribe tu WhatsApp.'; ok = false; }
+      if (!contacto) { msgC.textContent = 'Elige cómo prefieres que te contactemos.'; ok = false; }
+      if (!privacidad) { msgP.textContent = 'Debes aceptar el Aviso de Privacidad para continuar.'; ok = false; }
+      if (!ok) return;
       msg.textContent = 'Enviando…';
       var payload = {
         action: 'registro_prospecto',
         nombre: nombre,
         correo: correo,
+        whatsapp: whatsapp,
+        contacto: contacto,
+        privacidad: true,
         origen: 'taller-proxima-edicion',
         servicio: 'Lo que tu imagen comunica — Próxima edición'
       };
