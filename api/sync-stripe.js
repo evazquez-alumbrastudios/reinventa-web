@@ -4,7 +4,7 @@
  * Después de usarla puedes avisarme y la eliminamos.
  */
 
-const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbxY1AuqgR3sonF2MhxsphCVWHQr5pTJg-Qs_xmEHEFnTaK4Q6y_ivFXrhfHUW69or7ymA/exec';
+const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbx9fcL9RYunwwtYPlCCMu4DnnlGxuQn7DR-y8h-TwSkj0Zk8uzb8YpsBLCpJYT9lwJBIQ/exec';
 const MONTOS_TALLER = [130000, 150000, 170000, 260000, 300000, 340000, 390000, 450000, 510000]; // incluye x2 y x3 lugares
 
 module.exports = async function handler(req, res) {
