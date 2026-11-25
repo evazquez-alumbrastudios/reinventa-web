@@ -24,3 +24,6 @@
 *.bak_*
 *.BACKUP*.gs
 hub-preview.html
+
+.vercel
+.env*

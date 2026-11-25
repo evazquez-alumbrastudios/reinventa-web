@@ -1,23 +1,27 @@
 /**
  * /api/admin — Panel de administración de REINVENTA
- * GET  ?key=PASSWORD          → valida clave y devuelve datos completos
- * GET  ?key=PASSWORD&ping=1   → solo valida la clave (rápido, sin llamar GAS)
- * Contraseña: variable ADMIN_KEY o por defecto "reinventa2026"
+ * GET  (header x-admin-key)         → valida la clave y consulta el Apps Script
+ * GET  (header x-admin-key) ?ping=1 → solo valida la clave
+ * La clave vive solo en la variable ADMIN_KEY. Sin ella, la ruta queda cerrada.
  */
 
 const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbx9fcL9RYunwwtYPlCCMu4DnnlGxuQn7DR-y8h-TwSkj0Zk8uzb8YpsBLCpJYT9lwJBIQ/exec';
-const DEFAULT_KEY = 'reinventa2026';
 const GAS_TIMEOUT_MS = 28000; // Vercel hobby limit is 30s; leave 2s margin
+
+const { checkSecret } = require('./_auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'x-admin-key');
   res.setHeader('Cache-Control', 'no-store');
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { key, ping } = req.query;
-  const adminKey = process.env.ADMIN_KEY || DEFAULT_KEY;
+  const { ping } = req.query;
+  const auth = checkSecret(process.env.ADMIN_KEY, req.headers['x-admin-key']);
 
   // Auth check is always instant (no GAS needed)
-  if (key !== adminKey) return res.status(401).json({ error: 'Acceso no autorizado' });
+  if (auth === 'unset') return res.status(503).json({ error: 'Panel deshabilitado' });
+  if (auth !== 'ok') return res.status(401).json({ error: 'Acceso no autorizado' });
 
   // Ping mode: just validate the key, don't call GAS
   if (ping === '1') return res.status(200).json({ ok: true });

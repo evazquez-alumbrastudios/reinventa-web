@@ -44,7 +44,6 @@ var SHEET_PROSPECTOS     = 'Prospectos';
 
 var EMAILS_NOTIFICACION = ['evazquez@alumbrastudios.com', 'alopez@alumbrastudios.com'];
 var LIMITE_TOTAL        = 40;
-var STAFF_PIN           = '1508';
 
 /* ── Getters de hojas ────────────────────────────────────────── */
 function getSheet()               { return getSheetByName(SHEET_REGISTROS); }
@@ -85,7 +84,23 @@ function getSheetByName(nombre) {
 }
 
 /* ── doGet ───────────────────────────────────────────────────── */
+/* ── CONTENCIÓN DE SEGURIDAD ─────────────────────────────────────
+   Con CONTENCION_ACTIVA = true la web app pública SOLO acepta los
+   formularios de prospectos. Triggers y funciones del editor no cambian.
+   ───────────────────────────────────────────────────────────────── */
+var CONTENCION_ACTIVA = true;
+
+function _contencionPermitePost(data) {
+  if (!data || data.type) return false;
+  return !data.action || data.action === 'registro_prospecto';
+}
+
+function _respuestaContencion(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doGet(e) {
+  if (CONTENCION_ACTIVA) return _respuestaContencion({ status: 'ok' });
   var action = e.parameter.action || '';
   if (action === 'entrada') return handleEntrada(e.parameter.id || '', e.parameter.preview === '1');
   if (action === 'hub')     return handleHub(e.parameter.id || '');
@@ -99,6 +114,9 @@ function doGet(e) {
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
+    if (CONTENCION_ACTIVA && !_contencionPermitePost(data)) {
+      return _respuestaContencion({ result: 'error', error: 'Servicio deshabilitado temporalmente' });
+    }
     if (data.type && data.type === 'checkout.session.completed') {
       return handleStripeWebhook(data);
     }
@@ -3136,76 +3154,153 @@ function jsOk(obj)  { return ContentService.createTextOutput(JSON.stringify(obj 
    ═══════════════════════════════════════════════════════════════════ */
 var EMAILS_PROSPECTOS = ['marymendez.mk@gmail.com', 'alopez@alumbrastudios.com'];
 
-function enviarResumenProspectosDiario() {
-  var sheet = getProspectosSheet();
-  var data  = sheet.getDataRange().getValues();
-  var hoy   = new Date();
+/* Marca de agua: fecha del último prospecto ya notificado. Si no existe aún,
+   se parte de esta fecha para recuperar los registros del 5 de oct 2026 que
+   no se notificaron por el permiso faltante de MailApp. */
+var PROSPECTOS_PROP_ULTIMO = 'prospectos_ultimo_notificado';
+var PROSPECTOS_DESDE_INICIAL = new Date('2026-10-05T00:00:00-06:00');
+
+function _escHtmlProspecto(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _leerMarcaProspectos() {
+  var raw = PropertiesService.getScriptProperties().getProperty(PROSPECTOS_PROP_ULTIMO);
+  var ms = raw ? parseInt(raw, 10) : NaN;
+  return isNaN(ms) ? PROSPECTOS_DESDE_INICIAL : new Date(ms);
+}
+
+var _MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+function _fechaLargaEs(d) {
+  var tz = 'America/Mexico_City';
+  return Utilities.formatDate(d, tz, 'd') + ' de '
+    + _MESES_ES[parseInt(Utilities.formatDate(d, tz, 'M'), 10) - 1] + ' de '
+    + Utilities.formatDate(d, tz, 'yyyy');
+}
+
+function _canalProspecto(contacto) {
+  var c = String(contacto || '').toLowerCase();
+  if (c.indexOf('whatsapp') !== -1) return 'wa';
+  if (c.indexOf('correo') !== -1)   return 'mail';
+  return 'ambos';
+}
+
+function _linkWhatsApp(tel) {
+  var d = String(tel || '').replace(/\D/g, '');
+  if (d.length === 10) d = '52' + d;
+  return d;
+}
+
+/* Núcleo: arma el resumen consolidado y lo envía a "destinatarios".
+   Con guardarMarca=true avanza la marca solo si TODOS los envíos salieron bien. */
+function _resumenProspectos(destinatarios, guardarMarca, prefijoAsunto) {
+  var sheet  = getProspectosSheet();
+  var data   = sheet.getDataRange().getValues();
+  var marca  = _leerMarcaProspectos();
   var nuevos = [];
+  var maxFecha = marca;
 
   for (var i = 1; i < data.length; i++) {
-    var fecha = data[i][0];
-    if (!fecha) continue;
-    var f = new Date(fecha);
-    // Solo registros de las últimas 24h
-    if ((hoy - f) <= 24 * 60 * 60 * 1000) {
-      nuevos.push({
-        nombre:      data[i][1] || '',
-        correo:      data[i][2] || '',
-        whatsapp:    data[i][3] || '',
-        servicio:    data[i][4] || '',
-        transformar: data[i][5] || '',
-        cuando:      data[i][6] || '',
-        contacto:    data[i][7] || ''
-      });
-    }
+    if (!data[i][0]) continue;
+    var f = new Date(data[i][0]);
+    if (isNaN(f.getTime()) || f <= marca) continue;
+    if (f > maxFecha) maxFecha = f;
+    nuevos.push({
+      nombre:      data[i][1] || '',
+      correo:      data[i][2] || '',
+      whatsapp:    data[i][3] || '',
+      servicio:    data[i][4] || '',
+      transformar: data[i][5] || '',
+      cuando:      data[i][6] || '',
+      contacto:    data[i][7] || ''
+    });
   }
 
-  if (!nuevos.length) return; // Sin registros nuevos, no enviar nada
+  if (!nuevos.length) { Logger.log('Sin prospectos nuevos desde ' + marca.toISOString() + ' — no se envía correo'); return 0; }
 
-  var fechaStr = Utilities.formatDate(hoy, 'America/Mexico_City', "d 'de' MMMM 'de' yyyy");
+  var fechaStr = _fechaLargaEs(new Date());
+  var e        = _escHtmlProspecto;
+  var celda    = 'padding:.7rem 1rem;border-bottom:1px solid rgba(42,15,37,.07);font-size:.82rem;color:#4a3545;vertical-align:top;';
+  var th       = '<th style="padding:.6rem 1rem;text-align:left;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#C6A56A;font-weight:600;">';
 
-  var filas = nuevos.map(function(p) {
+  function celdaContacto(p, canal) {
+    var partes = [];
+    if (canal !== 'mail' && p.whatsapp) {
+      partes.push('<a href="https://wa.me/' + e(_linkWhatsApp(p.whatsapp)) + '" style="color:#2A0F25;">' + e(p.whatsapp) + '</a>');
+    }
+    if (canal !== 'wa' && p.correo) {
+      partes.push('<a href="mailto:' + e(p.correo) + '" style="color:#2A0F25;">' + e(p.correo) + '</a>');
+    }
+    return partes.length ? partes.join('<br>') : '—';
+  }
+
+  function filaProspecto(p, canal) {
+    var detalle = [];
+    if (p.transformar) detalle.push('<strong>Quiere transformar:</strong> ' + e(p.transformar));
+    if (p.cuando)      detalle.push('<strong>Comenzar:</strong> ' + e(p.cuando));
     return '<tr>'
-      + '<td style="padding:.7rem 1rem;border-bottom:1px solid rgba(42,15,37,.07);font-size:.85rem;color:#2A0F25;font-weight:600;">' + (p.nombre || '—') + '</td>'
-      + '<td style="padding:.7rem 1rem;border-bottom:1px solid rgba(42,15,37,.07);font-size:.82rem;color:#4a3545;">' + (p.correo || '—') + '</td>'
-      + '<td style="padding:.7rem 1rem;border-bottom:1px solid rgba(42,15,37,.07);font-size:.82rem;color:#4a3545;">' + (p.whatsapp || '—') + '</td>'
-      + '<td style="padding:.7rem 1rem;border-bottom:1px solid rgba(42,15,37,.07);font-size:.82rem;color:#4a3545;">' + (p.servicio || '—') + '</td>'
-      + '<td style="padding:.7rem 1rem;border-bottom:1px solid rgba(42,15,37,.07);font-size:.82rem;color:#8F7383;">' + (p.contacto || '—') + '</td>'
-      + '</tr>';
-  }).join('');
+      + '<td style="' + celda + 'font-size:.85rem;color:#2A0F25;font-weight:600;">' + (e(p.nombre) || '—') + '</td>'
+      + '<td style="' + celda + '">' + celdaContacto(p, canal) + '</td>'
+      + '<td style="' + celda + '">' + (e(p.servicio) || '—') + '</td>'
+      + '</tr>'
+      + (detalle.length
+          ? '<tr><td colspan="3" style="padding:0 1rem .8rem;border-bottom:1px solid rgba(42,15,37,.07);font-size:.78rem;color:#8F7383;">' + detalle.join(' &nbsp;·&nbsp; ') + '</td></tr>'
+          : '');
+  }
+
+  function bloque(titulo, lista, canal) {
+    if (!lista.length) return '';
+    return '<h2 style="font-family:Georgia,serif;font-weight:400;font-size:1.05rem;color:#2A0F25;margin:1.6rem 0 .6rem;">' + titulo + ' (' + lista.length + ')</h2>'
+      + '<div style="overflow-x:auto;">'
+      + '<table style="width:100%;border-collapse:collapse;font-family:\'Gill Sans\',Calibri,\'Segoe UI\',sans-serif;">'
+      + '<thead><tr style="background:#2A0F25;">' + th + 'Nombre</th>' + th + (canal === 'wa' ? 'WhatsApp' : canal === 'mail' ? 'Correo' : 'Contacto') + '</th>' + th + 'Servicio</th></tr></thead>'
+      + '<tbody>' + lista.map(function(p) { return filaProspecto(p, canal); }).join('') + '</tbody>'
+      + '</table></div>';
+  }
+
+  var porCanal = { wa: [], mail: [], ambos: [] };
+  nuevos.forEach(function(p) { porCanal[_canalProspecto(p.contacto)].push(p); });
 
   var html = _headerCorreo()
     + '<div style="padding:2rem 2.4rem 1.6rem;">'
     + '<div style="display:inline-block;background:rgba(42,15,37,.07);border-left:2px solid #C6A56A;padding:.4rem .75rem;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:#2A0F25;margin-bottom:1.2rem;">Prospectos nuevos · ' + fechaStr + '</div>'
     + '<h1 style="font-family:Georgia,serif;font-weight:400;font-size:1.35rem;color:#2A0F25;margin:0 0 .4rem;">'
-    + (nuevos.length === 1 ? '1 nueva persona contactó a Mary hoy.' : nuevos.length + ' personas contactaron a Mary hoy.')
+    + (nuevos.length === 1 ? '1 nueva persona dejó sus datos para contactar a Mary.' : nuevos.length + ' personas dejaron sus datos para contactar a Mary.')
     + '</h1>'
-    + '<p style="font-size:.82rem;color:#8F7383;margin:0 0 1.6rem;">Estos registros viven en la hoja <strong>Prospectos</strong> del spreadsheet.</p>'
-    + '<div style="overflow-x:auto;">'
-    + '<table style="width:100%;border-collapse:collapse;font-family:\'Gill Sans\',Calibri,\'Segoe UI\',sans-serif;">'
-    + '<thead>'
-    + '<tr style="background:#2A0F25;">'
-    + '<th style="padding:.6rem 1rem;text-align:left;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#C6A56A;font-weight:600;">Nombre</th>'
-    + '<th style="padding:.6rem 1rem;text-align:left;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#C6A56A;font-weight:600;">Correo</th>'
-    + '<th style="padding:.6rem 1rem;text-align:left;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#C6A56A;font-weight:600;">WhatsApp</th>'
-    + '<th style="padding:.6rem 1rem;text-align:left;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#C6A56A;font-weight:600;">Servicio</th>'
-    + '<th style="padding:.6rem 1rem;text-align:left;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:#C6A56A;font-weight:600;">Contacto pref.</th>'
-    + '</tr>'
-    + '</thead>'
-    + '<tbody>' + filas + '</tbody>'
-    + '</table>'
+    + bloque('Contactar por WhatsApp', porCanal.wa, 'wa')
+    + bloque('Contactar por correo', porCanal.mail, 'mail')
+    + bloque('Sin preferencia indicada', porCanal.ambos, 'ambos')
     + '</div>'
-    + '</div>'
-    + _footerCorreo('resumen interno');
+    + _footerCorreo('resumen interno')
+        .replace('Este correo fue enviado a resumen interno.', 'Resumen interno de prospectos de REINVENTA.')
+        .replace('Evento organizado integralmente por ', 'Sistema desarrollado por ');
 
-  var asunto = nuevos.length === 1
+  var asunto = (prefijoAsunto || '') + (nuevos.length === 1
     ? '1 prospecto nuevo — REINVENTA · ' + fechaStr
-    : nuevos.length + ' prospectos nuevos — REINVENTA · ' + fechaStr;
+    : nuevos.length + ' prospectos nuevos — REINVENTA · ' + fechaStr);
 
-  EMAILS_PROSPECTOS.forEach(function(email) {
+  destinatarios.forEach(function(email) {
     MailApp.sendEmail({ to: email, name: 'Reinventa by Mary Méndez', subject: asunto, htmlBody: html });
   });
-  Logger.log('Resumen prospectos enviado: ' + nuevos.length + ' registros');
+
+  if (guardarMarca) {
+    PropertiesService.getScriptProperties().setProperty(PROSPECTOS_PROP_ULTIMO, String(maxFecha.getTime()));
+  }
+  Logger.log('Resumen prospectos enviado a ' + destinatarios.join(', ') + ': ' + nuevos.length + ' registros'
+    + (guardarMarca ? ' (marca avanzada a ' + maxFecha.toISOString() + ')' : ' (PRUEBA: marca sin cambios)'));
+  return nuevos.length;
+}
+
+/* Trigger diario real: un solo correo consolidado a Mary y Ale. */
+function enviarResumenProspectosDiario() {
+  _resumenProspectos(EMAILS_PROSPECTOS, true, '');
+}
+
+/* PRUEBA: solo a evazquez@alumbrastudios.com y NO avanza la marca, se puede repetir. */
+function probarResumenProspectosAMi() {
+  _resumenProspectos(['evazquez@alumbrastudios.com'], false, '[PRUEBA] ');
 }
 
 /* ── Programar trigger diario a las 9am (hora México) ─────────── */

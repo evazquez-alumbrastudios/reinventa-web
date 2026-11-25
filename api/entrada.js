@@ -5,7 +5,7 @@
  */
 
 const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbx9fcL9RYunwwtYPlCCMu4DnnlGxuQn7DR-y8h-TwSkj0Zk8uzb8YpsBLCpJYT9lwJBIQ/exec';
-const DEFAULT_PIN = '1508';
+const { checkSecret } = require('./_auth');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,8 +32,9 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     const { id, pin } = req.body || {};
     if (!id) return res.status(400).json({ error: 'ID requerido' });
-    const staffPin = process.env.STAFF_PIN || DEFAULT_PIN;
-    if ((pin || '').toString().trim() !== staffPin) {
+    const auth = checkSecret(process.env.STAFF_PIN, (pin || '').toString().trim());
+    if (auth === 'unset') return res.status(503).json({ error: 'Check-in deshabilitado' });
+    if (auth !== 'ok') {
       return res.status(200).json({ error: 'pin_incorrecto' });
     }
     try {

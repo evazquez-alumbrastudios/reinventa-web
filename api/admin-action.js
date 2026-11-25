@@ -12,7 +12,6 @@
  * El resto usa timeout corto (12s).
  */
 const SHEETS_ENDPOINT   = 'https://script.google.com/macros/s/AKfycbx9fcL9RYunwwtYPlCCMu4DnnlGxuQn7DR-y8h-TwSkj0Zk8uzb8YpsBLCpJYT9lwJBIQ/exec';
-const DEFAULT_KEY       = 'reinventa2026';
 const TIMEOUT_LONG_MS   = 28000;
 const TIMEOUT_SHORT_MS  = 12000;
 const VERCEL_API        = 'https://vercel.com/api/web/insights';
@@ -65,6 +64,8 @@ async function handleAnalytics(res) {
   }
 }
 
+const { checkSecret } = require('./_auth');
+
 // ── handler principal ──────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -75,8 +76,9 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   const body     = req.body || {};
-  const adminKey = process.env.ADMIN_KEY || DEFAULT_KEY;
-  if (body.key !== adminKey) return res.status(401).json({ error: 'No autorizado' });
+  const auth = checkSecret(process.env.ADMIN_KEY, body.key);
+  if (auth === 'unset') return res.status(503).json({ error: 'Panel deshabilitado' });
+  if (auth !== 'ok') return res.status(401).json({ error: 'No autorizado' });
 
   const isLong     = body.sub === 'reporte_completo' || body.sub === 'set_survey_status';
   const timeoutMs  = isLong ? TIMEOUT_LONG_MS : TIMEOUT_SHORT_MS;
@@ -87,7 +89,7 @@ module.exports = async function handler(req, res) {
     const r = await fetch(SHEETS_ENDPOINT, {
       method:  'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body:    JSON.stringify({ action: 'admin_action', ...body }),
+      body:    JSON.stringify({ ...body, key: undefined, action: 'admin_action' }),
       signal:  controller.signal
     });
     clearTimeout(timeoutId);
